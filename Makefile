@@ -1,17 +1,18 @@
+CFLAGS := $(CFLAGS) -O3
+
 # Constants
 OBJECTS = array_utility.o bilinear_interpolation.o contrast_enhancement.o \
 	edge_detection.o fourier_filter.o gradient_filter.o \
 	histogram_equalization.o histograms.o kernel_filter.o \
-	manipulate_hsi.o median_filter.o process.o resize.o rotate.o lodepng.o
+	manipulate_hsi.o median_filter.o resize.o rotate.o lodepng.o
 
-all:	process
+all:	process profile_rotate
 
 clean:
 	rm -rf *.0 *.dSYM process
 
-process: $(OBJECTS)
-	gcc -g -o process $(OBJECTS) -lm
-
+process: $(OBJECTS) process.o
+	gcc $(CFLAGS) -o process process.o $(OBJECTS) -lm
 
 array_utility.o: array_utility.c array_utility.h
 bilinear_interpolation.o: bilinear_interpolation.c \
@@ -37,4 +38,7 @@ process.o: process.c array_utility.h rotate.h bilinear_interpolation.h \
   gradient_filter.h fourier_filter.h edge_detection.h lodepng.h
 resize.o: resize.c resize.h bilinear_interpolation.h array_utility.h
 rotate.o: rotate.c rotate.h bilinear_interpolation.h array_utility.h
+profile_rotate.o: profile_rotate.c lodepng.h ppm.h rotate.h array_utility.h timer.h
 
+profile_rotate: $(OBJECTS) profile_rotate.o
+	gcc $(CFLAGS) -o profile_rotate profile_rotate.o $(OBJECTS) -lm

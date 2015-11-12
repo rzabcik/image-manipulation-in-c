@@ -3,3 +3,5 @@ process
 ._*
 .DS_Store
 *.swp
+profile_rotate
+*.png
