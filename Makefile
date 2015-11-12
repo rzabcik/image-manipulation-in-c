@@ -10,7 +10,7 @@ clean:
 	rm -rf *.0 *.dSYM process
 
 process: $(OBJECTS)
-	gcc -lm -g -o process $(OBJECTS)
+	gcc -g -o process $(OBJECTS) -lm
 
 
 array_utility.o: array_utility.c array_utility.h
