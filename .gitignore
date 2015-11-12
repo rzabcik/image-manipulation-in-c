@@ -1,0 +1,5 @@
+*.o
+process
+._*
+.DS_Store
+*.swp
