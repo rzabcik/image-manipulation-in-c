@@ -35,20 +35,14 @@ int main(int argc, char** argv) {
     // Load an image
     unsigned width, height;
     float*** image = load_image(argv[1], &width, &height);
-    int repetitions = 100;
-    unsigned long long total_duration = 0;
-    Timer t;
-    int i = 0;
-    for (i = 0; i < repetitions; ++i) {
-        timer_start(&t);
-        float*** output = square_median_filter(image, height, width);
-        timer_stop(&t);
-        total_duration += timer_duration_ns(&t);
-        dealloc3df(output, 3, height, width);
-    }
-    total_duration /= repetitions;
 
-    // Print filename, image width, image height, average runtime in nanoseconds.
-    printf("%s,%d,%d,%llu\n", argv[1], width, height, total_duration);
+    // Perform the median filter on it once (will have a runner run this multiple times so we can see distribution instead of losing that data by averaging here)
+    Timer t;
+    timer_start(&t);
+    float*** output = square_median_filter(image, height, width);
+    timer_stop(&t);
+
+    // Print operation, filename, image width, image height, runtime in nanoseconds.
+    printf("median_filter,%s,%d,%d,%llu\n", argv[1], width, height, timer_duration_ns(&t));
 
 }

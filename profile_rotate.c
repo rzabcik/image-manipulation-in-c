@@ -36,22 +36,14 @@ int main(int argc, char** argv) {
     unsigned width, height;
     float*** image = load_image(argv[1], &width, &height);
 
-    // Rotate it 100 times
-    float angle_deg = 15;
-    int repetitions = 100;
-    unsigned long long total_duration = 0;
+    // Rotate it once (will have a runner run this multiple times so we can see distribution instead of losing that data by averaging here)
+    const float angle_deg = 15;
     Timer t;
-    int i = 0;
-    for (i = 0; i < repetitions; ++i) {
-        timer_start(&t);
-        float*** output = rotate_degrees(image, height, width, angle_deg);
-        timer_stop(&t);
-        total_duration += timer_duration_ns(&t);
-        dealloc3df(output, 3, height, width);
-    }
-    total_duration /= repetitions;
+    timer_start(&t);
+    float*** output = rotate_degrees(image, height, width, angle_deg);
+    timer_stop(&t);
 
-    // Print filename, image width, image height, average runtime in nanoseconds.
-    printf("%s,%d,%d,%llu\n", argv[1], width, height, total_duration);
+    // Print operation, filename, image width, image height, runtime in nanoseconds.
+    printf("rotate,%s,%d,%d,%llu\n", argv[1], width, height, timer_duration_ns(&t));
 
 }

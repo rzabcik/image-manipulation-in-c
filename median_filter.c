@@ -3,6 +3,7 @@
 #include "kernel_filter.h"
 
 #include <math.h>
+#include <stdlib.h> // silence implicit definition of free() warning.
 
 // Helper function to find the pixel array for a particular input image.
 float* find_pixel_array (float** input, int M_in, int N_in,

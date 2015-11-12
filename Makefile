@@ -1,4 +1,4 @@
-CFLAGS := $(CFLAGS) -O3
+CFLAGS := $(CFLAGS) -O3 -Wno-unused-result
 
 # Constants
 OBJECTS = array_utility.o bilinear_interpolation.o contrast_enhancement.o \
@@ -6,7 +6,7 @@ OBJECTS = array_utility.o bilinear_interpolation.o contrast_enhancement.o \
 	histogram_equalization.o histograms.o kernel_filter.o \
 	manipulate_hsi.o median_filter.o resize.o rotate.o lodepng.o
 
-all:	process profile_rotate profile_median_filter
+all:	process profile_rotate profile_median_filter profile_runner.sh
 
 clean:
 	rm -rf *.0 *.dSYM process
@@ -46,3 +46,7 @@ profile_rotate: $(OBJECTS) profile_rotate.o
 
 profile_median_filter: $(OBJECTS) profile_median_filter.o
 	gcc $(CFLAGS) -o profile_median_filter profile_median_filter.o $(OBJECTS) -lm
+
+profile_runner.sh: gen_runner.py
+	python gen_runner.py > profile_runner.sh
+	chmod +x profile_runner.sh

@@ -5,3 +5,6 @@ process
 *.swp
 profile_rotate
 *.png
+profile_runner.sh
+profile_median_filter
+*.csv
