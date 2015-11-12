@@ -3,8 +3,14 @@ This script generates a profile_runner.sh script that runs the profile executabl
 """
 
 # config
-image_path = ""
-images = ["constitution.png"]
+image_path = "/var/local/test_pngs/"
+images = [
+    "circle4.png",
+    "martian_colour_wheel_24_hue_f.png",
+    "resnik.png",
+    "watermelon_PNG232.png",
+    "what_even.png",
+]
 repetitions = 10
 ops = ["./profile_rotate", "./profile_median_filter"]
 output_filename = "times.csv"
