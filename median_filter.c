@@ -147,6 +147,7 @@ float*** square_median_filter (float*** input, int M_in, int N_in)
                 // pixel.
                 int center = (int) floor((double) array_size / 2);
                 output[k][i][j] = square[center];
+                free(square);
             }
         }
     }
