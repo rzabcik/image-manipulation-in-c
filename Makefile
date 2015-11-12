@@ -6,7 +6,7 @@ OBJECTS = array_utility.o bilinear_interpolation.o contrast_enhancement.o \
 	histogram_equalization.o histograms.o kernel_filter.o \
 	manipulate_hsi.o median_filter.o resize.o rotate.o lodepng.o
 
-all:	process profile_rotate
+all:	process profile_rotate profile_median_filter
 
 clean:
 	rm -rf *.0 *.dSYM process
@@ -39,6 +39,10 @@ process.o: process.c array_utility.h rotate.h bilinear_interpolation.h \
 resize.o: resize.c resize.h bilinear_interpolation.h array_utility.h
 rotate.o: rotate.c rotate.h bilinear_interpolation.h array_utility.h
 profile_rotate.o: profile_rotate.c lodepng.h ppm.h rotate.h array_utility.h timer.h
+profile_median_filter.o: profile_rotate.c lodepng.h ppm.h median_filter.h array_utility.h timer.h
 
 profile_rotate: $(OBJECTS) profile_rotate.o
 	gcc $(CFLAGS) -o profile_rotate profile_rotate.o $(OBJECTS) -lm
+
+profile_median_filter: $(OBJECTS) profile_median_filter.o
+	gcc $(CFLAGS) -o profile_median_filter profile_median_filter.o $(OBJECTS) -lm
