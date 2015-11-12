@@ -5,13 +5,8 @@
 #include <stdio.h>
 #include <math.h>
 
-float*** rotate (float*** input, int M_in, int N_in)
+float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg)
 {
-    // Prompt the user.
-    float rotation_factor;
-    printf("By how many degrees CCW do you want to rotate your image?\n");
-    scanf("%f", &rotation_factor);
-    printf("Rotating the input file...\n");
 
     // Prepare the output files.
     float*** output = alloc3df(3, M_in, N_in);
@@ -26,7 +21,7 @@ float*** rotate (float*** input, int M_in, int N_in)
     for (i = 0; i < M_in; ++i) {
         for (j = 0; j < N_in; ++j) {
             //    // Figure out how rotated we want the image.
-            double angle = rotation_factor * (double) Pi / 180;
+            double angle = rotation_deg * (double) Pi / 180;
             float vertical_position = (float) cos(angle) *
                 (i - vertical_center) + sin(angle) * (j - horizontal_center)
                 + vertical_center;
@@ -57,4 +52,15 @@ float*** rotate (float*** input, int M_in, int N_in)
     }
 
     return output;
+}
+
+float*** rotate (float*** input, int M_in, int N_in)
+{
+    // Prompt the user.
+    float rotation_factor;
+    printf("By how many degrees CCW do you want to rotate your image?\n");
+    scanf("%f", &rotation_factor);
+    printf("Rotating the input file...\n");
+
+    return rotate_degrees(input, M_in, N_in, rotation_factor);
 }
