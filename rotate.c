@@ -22,7 +22,7 @@ typedef struct {
 } inv_affine_transform_region_args;
 void inv_affine_transform_region(inv_affine_transform_region_args* args);
 
-float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg, int n_threads)
+float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg, int n_threads, rotate_degrees_debug_info* debug)
 {
     // If n_threads is 0, make a guess about how many threads to use.
     if (n_threads <= 0) {
@@ -33,6 +33,9 @@ float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg,
             // For small images, threading overhead outweights computation cost.
             n_threads = 1;
         }
+    }
+    if (debug) {
+        debug->n_threads_used = n_threads;
     }
 
     // compute matrix
@@ -132,5 +135,5 @@ float*** rotate (float*** input, int M_in, int N_in)
     scanf("%f", &rotation_factor);
     printf("Rotating the input file...\n");
 
-    return rotate_degrees(input, M_in, N_in, rotation_factor, 0);
+    return rotate_degrees(input, M_in, N_in, rotation_factor, 0, NULL);
 }

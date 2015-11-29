@@ -19,7 +19,7 @@ ops = [
 output_filename = "times.csv"
 
 print "#!/bin/sh"
-print "echo \"operation,filename,width,height,time_ns\" > %s" % output_filename
+print "echo \"operation,filename,width,height,time_ns,n_threads\" > %s" % output_filename
 
 i = 0
 num_ops = len(ops) * len(images) * repetitions
