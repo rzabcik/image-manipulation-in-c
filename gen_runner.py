@@ -12,7 +12,10 @@ images = [
     "what_even.png",
 ]
 repetitions = 10
-ops = ["./profile_rotate", "./profile_median_filter"]
+ops = [
+    "./profile_rotate",
+    "./profile_median_filter",
+]
 output_filename = "times.csv"
 
 print "#!/bin/sh"

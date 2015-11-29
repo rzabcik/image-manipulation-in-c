@@ -1,4 +1,5 @@
 CFLAGS := $(CFLAGS) -O3 -Wno-unused-result
+LDFLAGS := $(LDFLAGS) -lrt -lm -lpthread
 
 # Constants
 OBJECTS = array_utility.o bilinear_interpolation.o contrast_enhancement.o \
@@ -12,7 +13,7 @@ clean:
 	rm -rf *.0 *.dSYM process
 
 process: $(OBJECTS) process.o
-	gcc $(CFLAGS) -o process process.o $(OBJECTS) -lm
+	gcc $(CFLAGS) -o process process.o $(OBJECTS) $(LDFLAGS)
 
 array_utility.o: array_utility.c array_utility.h
 bilinear_interpolation.o: bilinear_interpolation.c \
@@ -42,10 +43,10 @@ profile_rotate.o: profile_rotate.c lodepng.h ppm.h rotate.h array_utility.h time
 profile_median_filter.o: profile_rotate.c lodepng.h ppm.h median_filter.h array_utility.h timer.h
 
 profile_rotate: $(OBJECTS) profile_rotate.o
-	gcc $(CFLAGS) -o profile_rotate profile_rotate.o $(OBJECTS) -lm
+	gcc $(CFLAGS) -o profile_rotate profile_rotate.o $(OBJECTS) $(LDFLAGS)
 
 profile_median_filter: $(OBJECTS) profile_median_filter.o
-	gcc $(CFLAGS) -o profile_median_filter profile_median_filter.o $(OBJECTS) -lm
+	gcc $(CFLAGS) -o profile_median_filter profile_median_filter.o $(OBJECTS) $(LDFLAGS)
 
 profile_runner.sh: gen_runner.py
 	python gen_runner.py > profile_runner.sh

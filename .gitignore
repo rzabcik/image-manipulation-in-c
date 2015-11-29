@@ -8,3 +8,4 @@ profile_rotate
 profile_runner.sh
 profile_median_filter
 *.csv
+gmon*.out

@@ -4,12 +4,84 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <pthread.h>
+#include <unistd.h>
 
-float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg)
+#define MULTITHREAD_THRESHOLD 250000
+
+typedef struct {
+    float*** input;
+    float*** output;
+    int outX;
+    int outY;
+    int outW;
+    int outH;
+    int M_in;
+    int N_in;
+    float* xform;
+} inv_affine_transform_region_args;
+void inv_affine_transform_region(inv_affine_transform_region_args* args);
+
+float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg, int n_threads)
 {
+    // If n_threads is 0, make a guess about how many threads to use.
+    if (n_threads <= 0) {
+        if (M_in * N_in > MULTITHREAD_THRESHOLD) {
+            // get number of CPU cores; see http://stackoverflow.com/a/150971
+            n_threads = sysconf(_SC_NPROCESSORS_ONLN);
+        } else {
+            // For small images, threading overhead outweights computation cost.
+            n_threads = 1;
+        }
+    }
 
-    // Prepare the output files.
+    // compute matrix
+    float angle = rotation_deg * (float) Pi / 180;
+    float xform[4];
+    xform[0] = cosf(angle);
+    xform[1] = sinf(angle);
+    xform[2] = -xform[1];
+    xform[3] = xform[0];
+
+    // start threads
     float*** output = alloc3df(3, M_in, N_in);
+    if (n_threads == 1) {
+        inv_affine_transform_region_args args = (inv_affine_transform_region_args){ input, output, 0, 0, M_in, N_in, M_in, N_in, xform };
+        inv_affine_transform_region(&args);
+    } else {
+        pthread_t threads[n_threads];
+        inv_affine_transform_region_args args[n_threads];
+        int i = 0;
+        int rowsPerThread = M_in / n_threads;
+        for (i = 0; i < n_threads; ++i) {
+            int startY = rowsPerThread * i;
+            int regionHeight = rowsPerThread;
+            if (i == n_threads - 1) {
+                regionHeight += M_in % n_threads;
+            }
+            args[i] = (inv_affine_transform_region_args){ input, output, 0, startY, N_in, regionHeight, M_in, N_in, xform };
+            pthread_create(&threads[i], NULL, (void * (*)(void *))inv_affine_transform_region, (void*)&args[i]);
+        }
+        for (i = 0; i < n_threads; ++i) {
+            pthread_join(threads[i], NULL);
+        }
+    }
+
+    return output;
+}
+
+void inv_affine_transform_region(inv_affine_transform_region_args* args) {
+
+    // Extract args.
+    float*** input = args->input;
+    float*** output = args->output;
+    int outX = args->outX;
+    int outY = args->outY;
+    int outW = args->outW;
+    int outH = args->outH;
+    int M_in = args->M_in;
+    int N_in = args->N_in;
+    float* xform = args->xform;
 
     // Define the center of the image.
     int vertical_center = floor(M_in / 2);
@@ -18,15 +90,14 @@ float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg)
     // Loop through each pixel of the new image, select the new vertical
     // and horizontal positions, and interpolate the image to make the change.
     int i, j, k;
-    for (i = 0; i < M_in; ++i) {
-        for (j = 0; j < N_in; ++j) {
-            //    // Figure out how rotated we want the image.
-            double angle = rotation_deg * (double) Pi / 180;
-            float vertical_position = (float) cos(angle) *
-                (i - vertical_center) + sin(angle) * (j - horizontal_center)
+    for (i = outY; i < outY + outH; ++i) {
+        for (j = outX; j < outX + outW; ++j) {
+            // Figure out how rotated we want the image.
+            float vertical_position = (float) xform[0] *
+                (i - vertical_center) + xform[1] * (j - horizontal_center)
                 + vertical_center;
-            float horizontal_position = (float) -sin(angle) *
-                (i - vertical_center) + cos(angle) * (j - horizontal_center)
+            float horizontal_position = (float) xform[2] *
+                (i - vertical_center) + xform[3] * (j - horizontal_center)
                 + horizontal_center;
 
             // Figure out the four locations (and then, four pixels)
@@ -51,7 +122,6 @@ float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg)
         }
     }
 
-    return output;
 }
 
 float*** rotate (float*** input, int M_in, int N_in)
@@ -62,5 +132,5 @@ float*** rotate (float*** input, int M_in, int N_in)
     scanf("%f", &rotation_factor);
     printf("Rotating the input file...\n");
 
-    return rotate_degrees(input, M_in, N_in, rotation_factor);
+    return rotate_degrees(input, M_in, N_in, rotation_factor, 0);
 }

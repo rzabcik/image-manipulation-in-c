@@ -5,7 +5,7 @@
 
 #include "bilinear_interpolation.h"
 
-float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg);
+float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg, int n_threads);
 float*** rotate (float*** input, int M_in, int N_in);
 
 #endif

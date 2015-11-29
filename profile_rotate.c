@@ -40,10 +40,12 @@ int main(int argc, char** argv) {
     const float angle_deg = 15;
     Timer t;
     timer_start(&t);
-    float*** output = rotate_degrees(image, height, width, angle_deg);
+    float*** output = rotate_degrees(image, height, width, angle_deg, 0);
     timer_stop(&t);
 
     // Print operation, filename, image width, image height, runtime in nanoseconds.
     printf("rotate,%s,%d,%d,%llu\n", argv[1], width, height, timer_duration_ns(&t));
+
+    return 0;
 
 }
