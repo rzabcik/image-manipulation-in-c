@@ -49,7 +49,7 @@ float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg,
     // start threads
     float*** output = alloc3df(3, M_in, N_in);
     if (n_threads == 1) {
-        inv_affine_transform_region_args args = (inv_affine_transform_region_args){ input, output, 0, 0, M_in, N_in, M_in, N_in, xform };
+        inv_affine_transform_region_args args = (inv_affine_transform_region_args){ input, output, 0, 0, N_in, M_in, M_in, N_in, xform };
         inv_affine_transform_region(&args);
     } else {
         pthread_t threads[n_threads];
