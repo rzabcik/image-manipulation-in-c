@@ -1,4 +1,4 @@
-CFLAGS := $(CFLAGS) -O3 -Wno-unused-result
+CFLAGS := $(CFLAGS) -O3 -std=gnu99 -Wno-unused-result
 LDFLAGS := $(LDFLAGS) -lrt -lm -lpthread
 
 # Constants
