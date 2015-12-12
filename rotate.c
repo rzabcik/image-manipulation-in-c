@@ -6,6 +6,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <unistd.h>
+#include "timer.h"
 
 #define MULTITHREAD_THRESHOLD 250000
 
@@ -19,6 +20,8 @@ typedef struct {
     int M_in;
     int N_in;
     float* xform;
+    rotate_degrees_debug_info* debug;
+    int threadID;
 } inv_affine_transform_region_args;
 void inv_affine_transform_region(inv_affine_transform_region_args* args);
 
@@ -49,7 +52,7 @@ float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg,
     // start threads
     float*** output = alloc3df(3, M_in, N_in);
     if (n_threads == 1) {
-        inv_affine_transform_region_args args = (inv_affine_transform_region_args){ input, output, 0, 0, N_in, M_in, M_in, N_in, xform };
+        inv_affine_transform_region_args args = (inv_affine_transform_region_args){ input, output, 0, 0, N_in, M_in, M_in, N_in, xform, debug, 0 };
         inv_affine_transform_region(&args);
     } else {
         pthread_t threads[n_threads];
@@ -62,7 +65,7 @@ float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg,
             if (i == n_threads - 1) {
                 regionHeight += M_in % n_threads;
             }
-            args[i] = (inv_affine_transform_region_args){ input, output, 0, startY, N_in, regionHeight, M_in, N_in, xform };
+            args[i] = (inv_affine_transform_region_args){ input, output, 0, startY, N_in, regionHeight, M_in, N_in, xform, debug, i };
             pthread_create(&threads[i], NULL, (void * (*)(void *))inv_affine_transform_region, (void*)&args[i]);
         }
         for (i = 0; i < n_threads; ++i) {
@@ -75,6 +78,9 @@ float*** rotate_degrees (float*** input, int M_in, int N_in, float rotation_deg,
 
 void inv_affine_transform_region(inv_affine_transform_region_args* args) {
 
+    Timer timer;
+    timer_start(&timer);
+
     // Extract args.
     float*** input = args->input;
     float*** output = args->output;
@@ -85,6 +91,7 @@ void inv_affine_transform_region(inv_affine_transform_region_args* args) {
     int M_in = args->M_in;
     int N_in = args->N_in;
     float* xform = args->xform;
+    rotate_degrees_debug_info* debug = args->debug;
 
     // Define the center of the image.
     int vertical_center = floor(M_in / 2);
@@ -123,6 +130,11 @@ void inv_affine_transform_region(inv_affine_transform_region_args* args) {
                 }
             }
         }
+    }
+
+    timer_stop(&timer);
+    if (debug) {
+        debug->times_per_thread[args->threadID] = timer_duration_ns(&timer);
     }
 
 }
