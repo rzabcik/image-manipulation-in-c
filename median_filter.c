@@ -206,9 +206,9 @@ int running_median(uint8_t histogram[256], uint8_t* leftcol, uint8_t* rightcol, 
         do {
             (*median)--;
             *ltmedian -= histogram[*median];
-        } while (*ltmedian > th);
+        } while (*median > 0 && *ltmedian > th);
     } else {
-        while (*ltmedian + histogram[*median] <= th) {
+        while (*median < 255 && *ltmedian + histogram[*median] <= th) {
             *ltmedian += histogram[*median];
             (*median)++;
         }
