@@ -153,7 +153,7 @@ float*** square_median_filter (float*** input, int height, int width)
     return output;
 }
 
-inline int get_color_bounded(int x, int y, int color, uint8_t* input, int height, int width) {
+inline uint8_t get_color_bounded(int x, int y, int color, uint8_t* input, int height, int width) {
     if (x < 0) {
         x = 0;
     }
@@ -292,6 +292,114 @@ uint8_t* square_median_filter_i(unsigned char* input, int height, int width) {
     free(histogram_r);
     free(histogram_g);
     free(histogram_b);
+    return output;
+}
+
+typedef struct {
+    uint8_t* input;
+    uint8_t* output;
+    int wy_start;
+    int wy_stop;
+    int width;
+    int height;
+} mf_thread_args;
+
+void mf_thread(mf_thread_args* args) {
+    int radius      = RADIUS;
+    uint8_t* input  = args->input;
+    uint8_t* output = args->output;
+    int wy_start    = args->wy_start;
+    int wy_stop     = args->wy_stop;
+    int width       = args->width;
+    int height      = args->height;
+    uint8_t* histogram_r = malloc(sizeof(uint8_t) * 255);
+    uint8_t* histogram_g = malloc(sizeof(uint8_t) * 255);
+    uint8_t* histogram_b = malloc(sizeof(uint8_t) * 255);
+    uint8_t median_r = 0;
+    uint8_t median_g = 0;
+    uint8_t median_b = 0;
+    int ltmedian_r = 0;
+    int ltmedian_g = 0;
+    int ltmedian_b = 0;
+    uint8_t* leftcol = malloc(sizeof(uint8_t) * (2 * radius + 1));
+    uint8_t* rightcol = malloc(sizeof(uint8_t) * (2 * radius + 1));
+    for (int wy = wy_start; wy < wy_stop; wy++) {
+        // Set up array histogram for first window
+        int wx = 0;
+        // zero out histograms
+        memset(histogram_r, 0, 255);
+        memset(histogram_g, 0, 255);
+        memset(histogram_b, 0, 255);
+        for (int x = wx - radius; x <= wx + radius; x++) {
+            for (int y = wy - radius; y <= wy + radius; y++){
+                histogram_r[get_color_bounded(x, y, 0, input, height, width)]++;
+                histogram_g[get_color_bounded(x, y, 1, input, height, width)]++;
+                histogram_b[get_color_bounded(x, y, 2, input, height, width)]++;
+            }
+        }
+        histogram_median(histogram_r, &median_r, &ltmedian_r);
+        histogram_median(histogram_g, &median_g, &ltmedian_g);
+        histogram_median(histogram_b, &median_b, &ltmedian_b);
+        // output these medians to image
+        output[3 * wy * width + 3 * wx + 0] = median_r;
+        output[3 * wy * width + 3 * wx + 1] = median_g;
+        output[3 * wy * width + 3 * wx + 2] = median_b;
+        for (wx = 1; wx < width; wx++) {
+            // put (wx - radius - 1, wy - radius) (wx - radius - 1, wy + radius) into leftcol
+            for (int i = 0; i < 2 * radius + 1; i++){
+                leftcol[i] = get_color_bounded(wx - radius - 1, wy - radius + i, 0, input, height, width);
+            }
+            // put (wx + radius, wy - radius) (wx + radius, wy + radius) into rightcol
+            for (int i = 0; i < 2 * radius + 1; i++) {
+                rightcol[i] = get_color_bounded(wx + radius, wy - radius + i, 0, input, height, width);
+            }
+            running_median(histogram_r, leftcol, rightcol, &median_r, &ltmedian_r);
+            // output median to image
+            output[3 * wy * width + 3 * wx + 0] = median_r;
+            for (int i = 0; i < 2 * radius + 1; i++){
+                leftcol[i] = get_color_bounded(wx - radius - 1, wy - radius + i, 1, input, height, width);
+            }
+            for (int i = 0; i < 2 * radius + 1; i++) {
+                rightcol[i] = get_color_bounded(wx + radius, wy - radius + i, 1, input, height, width);
+            }
+            running_median(histogram_g, leftcol, rightcol, &median_g, &ltmedian_g);
+            // output median to image
+            output[3 * wy * width + 3 * wx + 1] = median_g;
+            for (int i = 0; i < 2 * radius + 1; i++){
+                leftcol[i] = get_color_bounded(wx - radius - 1, wy - radius + i, 2, input, height, width);
+            }
+            for (int i = 0; i < 2 * radius + 1; i++) {
+                rightcol[i] = get_color_bounded(wx + radius, wy - radius + i, 2, input, height, width);
+            }
+            running_median(histogram_b, leftcol, rightcol, &median_b, &ltmedian_b);
+            // output median to image
+            output[3 * wy * width + 3 * wx + 2] = median_b;
+        }
+    }
+    free(leftcol);
+    free(rightcol);
+    free(histogram_r);
+    free(histogram_g);
+    free(histogram_b);
+}
+
+uint8_t* square_median_filter_threaded(uint8_t* input, int height, int width, int nthreads) {
+    // If nthreads is 0, make a guess about how many threads to use.
+    if (nthreads <= 0) {
+        nthreads = sysconf(_SC_NPROCESSORS_ONLN);
+    }
+    uint8_t* output = malloc(3 * sizeof(uint8_t) * height * width);
+    pthread_t threads[nthreads];
+    mf_thread_args args[nthreads];
+    int each = height / nthreads;
+    for (int t = 0; t < nthreads; t++) {
+        if (t == height - 1) {
+            args[t] = (mf_thread_args) { input, output, each * t, height, width, height };
+        } else {
+            args[t] = (mf_thread_args) { input, output, each * t, each * t + each, width, height };
+        }
+        pthread_create(&threads[t], NULL, (void * (*)(void *))mf_thread, &args[t]);
+    }
     return output;
 }
 
