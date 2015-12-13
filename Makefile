@@ -5,7 +5,7 @@ LDFLAGS := $(LDFLAGS) -lrt -lm -lpthread
 OBJECTS = array_utility.o bilinear_interpolation.o contrast_enhancement.o \
 	edge_detection.o fourier_filter.o gradient_filter.o \
 	histogram_equalization.o histograms.o kernel_filter.o \
-	manipulate_hsi.o median_filter.o resize.o rotate.o lodepng.o
+	manipulate_hsi.o median_filter.o resize.o rotate.o lodepng.o timer.o
 
 all:	process profile_rotate profile_median_filter profile_runner.sh
 

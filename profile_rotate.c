@@ -25,6 +25,8 @@ float*** load_image(char* filename, unsigned* width, unsigned* height) {
 
 }
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
 int main(int argc, char** argv) {
 
     if (argc < 2) {
@@ -44,13 +46,22 @@ int main(int argc, char** argv) {
     // Rotate it once (will have a runner run this multiple times so we can see distribution instead of losing that data by averaging here)
     const float angle_deg = 15;
     rotate_degrees_debug_info debug;
+    debug.times_per_thread = (unsigned long long*)calloc(n_threads, sizeof(unsigned long long));
     Timer t;
     timer_start(&t);
     float*** output = rotate_degrees(image, height, width, angle_deg, n_threads, &debug);
     timer_stop(&t);
 
-    // Print operation, filename, image width, image height, runtime in nanoseconds, number of threads used.
-    printf("rotate,%s,%d,%d,%llu,%d\n", argv[1], width, height, timer_duration_ns(&t), debug.n_threads_used);
+    // get max per-thread time
+    unsigned long long maxPerThreadTime = 0;
+    int i;
+    for (i = 0; i < n_threads; ++i) {
+        maxPerThreadTime = max(maxPerThreadTime, debug.times_per_thread[i]);
+    }
+
+    // Print operation, filename, image width, image height, runtime in nanoseconds, number of threads used
+    // As per recommendation, we report the maximum per-thread time instead of the time it takes overall since pthread_join delays.
+    printf("rotate,%s,%d,%d,%llu,%d\n", argv[1], width, height, maxPerThreadTime/*timer_duration_ns(&t)*/, debug.n_threads_used);
 
     return 0;
 
