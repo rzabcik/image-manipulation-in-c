@@ -1,5 +1,6 @@
 """
 This script generates a profile_runner.sh script that runs the profile executables multiple times and combines the output in "times.csv"
+It can also generate a scalability test for rotate (see commented line at bottom).
 """
 
 # config
@@ -48,5 +49,5 @@ def rotate_scalability_test():
                 i += 1
                 print "echo \"%d of %d runs completed (%s %s %d).\"" % (i, num_ops, op, im, n_threads)
 
-# regular_test()
-rotate_scalability_test()
+regular_test()
+# rotate_scalability_test()
